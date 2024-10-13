@@ -5,7 +5,8 @@ import GroupTabs from '../components/GroupTabs';
 import PinToggle from '../components/PinToggle';
 import TabRadar from '../components/TabRadar';
 import FocusMode from '../components/FocusMode';
-import { getTabs, closeTab, switchToTab, createTabGroup } from '../utils/chromeUtils';
+import SessionManager from '../components/SessionManager';
+import { getTabs, closeTab, switchToTab, createTabGroup, hibernateTab, restoreTab } from '../utils/chromeUtils';
 
 const Popup = () => {
   const [tabs, setTabs] = useState([]);
@@ -63,6 +64,16 @@ const Popup = () => {
     setViewMode(viewMode === 'list' ? 'radar' : 'list');
   };
 
+  const handleHibernate = async (tabId) => {
+    await hibernateTab(tabId);
+    loadTabs();
+  };
+
+  const handleRestore = async (tabId) => {
+    await restoreTab(tabId);
+    loadTabs();
+  };
+
   return (
     <div className="w-full h-full bg-gradient-to-br from-blue-50 to-blue-100 flex flex-col">
       <div className="flex items-center justify-between bg-blue-600 p-4 text-white">
@@ -77,12 +88,15 @@ const Popup = () => {
       <div className="flex-grow overflow-y-auto p-4">
         <SearchBar onSearch={handleSearch} />
         <FocusMode />
+        <SessionManager />
         {viewMode === 'list' ? (
           <TabList 
             tabs={filteredTabs} 
             onClose={handleClose} 
             onSwitch={handleSwitch}
             onGroup={handleGroupCreate}
+            onHibernate={handleHibernate}
+            onRestore={handleRestore}
           />
         ) : (
           <TabRadar 
