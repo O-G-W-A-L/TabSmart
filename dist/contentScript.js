@@ -1,14 +1,1 @@
-console.log("TabSmart content script loaded");let e=null;chrome.runtime.onMessage.addListener((n,o,d)=>{console.log("Content script received message:",n),n.action==="togglePinned"&&(n.isPinned?(console.log("Creating sidebar"),t()):(console.log("Removing sidebar"),i()))});function t(){if(e)return;e=document.createElement("div"),e.id="tabsmart-sidebar",e.style.cssText=`
-    position: fixed;
-    top: 0;
-    right: 0;
-    width: 400px;
-    height: 100vh;
-    background: white;
-    box-shadow: -2px 0 5px rgba(0,0,0,0.1);
-    z-index: 9999;
-  `;const n=document.createElement("iframe");n.src=chrome.runtime.getURL("index.html"),n.style.cssText=`
-    width: 100%;
-    height: 100%;
-    border: none;
-  `,e.appendChild(n),document.body.appendChild(e),document.body.style.marginRight="400px"}function i(){e&&(document.body.removeChild(e),document.body.style.marginRight="0",e=null)}
+console.log("TabSmart content script loaded");chrome.runtime.onMessage.addListener((n,t,e)=>{if(console.log("Content script received message:",n),n.action==="updatePinState"){const d=n.isPinned;i(d),e({success:!0})}return!0});function i(n){const t="tabsmart-pinned-element";let e=document.getElementById(t);n?e||(e=document.createElement("div"),e.id=t,e.style.position="fixed",e.style.top="10px",e.style.right="10px",e.style.backgroundColor="rgba(255, 255, 255, 0.9)",e.style.border="1px solid #ccc",e.style.padding="10px",e.style.zIndex="10000",e.innerText="TabSmart Extension - Pinned",document.body.appendChild(e)):e&&document.body.removeChild(e)}chrome.runtime.sendMessage({action:"getPinState"},n=>{n&&n.isPinned!==void 0&&i(n.isPinned)});

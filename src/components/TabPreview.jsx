@@ -11,7 +11,7 @@ const TabPreview = ({ tab }) => {
     >
       {showPreview && (
         <div className="p-2 bg-white border rounded shadow-lg">
-          <img src={`https://api.thumbsnap.com/api/capture?url=${encodeURIComponent(tab.url)}&width=320&height=240`} alt={tab.title} className="w-80 h-60 object-cover" />
+          <img src={`https://api.apiflash.com/v1/urltoimage?access_key=YOUR_API_KEY&url=${encodeURIComponent(tab.url)}&width=320&height=240`} alt={tab.title} className="w-80 h-60 object-cover" />
           <p className="mt-2 text-sm">{tab.title}</p>
         </div>
       )}
