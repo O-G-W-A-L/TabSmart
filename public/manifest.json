@@ -2,7 +2,8 @@
   "manifest_version": 3,
   "name": "TabSmart",
   "version": "1.1.0",
-  "description": "Advanced tab management with innovative features",
+  "description": "Tab management",
+  "author": "hunter",
   "permissions": [
     "tabs",
     "tabGroups",
