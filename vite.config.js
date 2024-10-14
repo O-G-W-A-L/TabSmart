@@ -24,4 +24,5 @@ export default defineConfig({
       '@': resolve(__dirname, 'src'),
     },
   },
+  publicDir: 'public', // This tells Vite to copy the public folder to the dist folder
 })
