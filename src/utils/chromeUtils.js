@@ -38,28 +38,82 @@ export const restoreTab = (tabId) => {
   });
 };
 
-export const saveSession = () => {
+export const detectDuplicates = (tabs) => {
+  const urlCounts = {};
+  tabs.forEach(tab => {
+    urlCounts[tab.url] = (urlCounts[tab.url] || 0) + 1;
+  });
+  return Object.fromEntries(Object.entries(urlCounts).filter(([, count]) => count > 1));
+};
+
+export const closeDuplicates = (url) => {
   return new Promise((resolve) => {
-    chrome.tabs.query({}, (tabs) => {
-      const session = tabs.map(tab => ({
-        url: tab.url,
-        title: tab.title,
-        pinned: tab.pinned
-      }));
-      chrome.storage.local.set({ savedSession: session }, resolve);
+    chrome.tabs.query({ url }, (tabs) => {
+      const tabIds = tabs.slice(1).map(tab => tab.id);
+      chrome.tabs.remove(tabIds, resolve);
     });
   });
 };
 
-export const restoreSession = () => {
+export const sortTabs = (tabs, sortType) => {
+  switch (sortType) {
+    case 'title':
+      return tabs.sort((a, b) => a.title.localeCompare(b.title));
+    case 'domain':
+      return tabs.sort((a, b) => new URL(a.url).hostname.localeCompare(new URL(b.url).hostname));
+    case 'recent':
+      return tabs.sort((a, b) => b.lastAccessed - a.lastAccessed);
+    case 'opened':
+      return tabs.sort((a, b) => a.id - b.id);
+    default:
+      return tabs;
+  }
+};
+
+export const saveSession = async (sessionName) => {
+  const tabs = await getTabs();
+  const session = {
+    name: sessionName,
+    tabs: tabs.map(tab => ({ url: tab.url, title: tab.title })),
+    timestamp: Date.now()
+  };
   return new Promise((resolve) => {
-    chrome.storage.local.get(['savedSession'], (result) => {
-      if (result.savedSession) {
-        result.savedSession.forEach(tab => {
-          chrome.tabs.create({ url: tab.url, pinned: tab.pinned });
+    chrome.storage.local.get(['sessions'], (result) => {
+      const sessions = result.sessions || [];
+      sessions.push(session);
+      chrome.storage.local.set({ sessions }, () => {
+        resolve(session);
+      });
+    });
+  });
+};
+
+export const restoreSession = async (sessionName) => {
+  return new Promise((resolve) => {
+    chrome.storage.local.get(['sessions'], (result) => {
+      const sessions = result.sessions || [];
+      const session = sessions.find(s => s.name === sessionName);
+      if (session) {
+        session.tabs.forEach(tab => {
+          chrome.tabs.create({ url: tab.url });
         });
+        resolve(true);
+      } else {
+        resolve(false);
       }
-      resolve();
+    });
+  });
+};
+
+// Add new togglePinned functionality
+export const togglePinned = (tabId) => {
+  return new Promise((resolve) => {
+    chrome.tabs.update(tabId, { pinned: true }, (tab) => {
+      if (chrome.runtime.lastError) {
+        resolve({ success: false, error: chrome.runtime.lastError });
+      } else {
+        resolve({ success: true, tab });
+      }
     });
   });
 };
