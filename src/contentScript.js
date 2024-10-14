@@ -1,53 +1,47 @@
 console.log('TabSmart content script loaded');
 
-let sidebar = null;
-
+// Listen for messages from the background script
 chrome.runtime.onMessage.addListener((request, sender, sendResponse) => {
   console.log('Content script received message:', request);
-  if (request.action === 'togglePinned') {
-    if (request.isPinned) {
-      console.log('Creating sidebar');
-      createSidebar();
-    } else {
-      console.log('Removing sidebar');
-      removeSidebar();
-    }
+  
+  if (request.action === 'updatePinState') {
+    const isPinned = request.isPinned;
+    updatePinnedUI(isPinned);
+    sendResponse({ success: true });
   }
+  return true; // Indicates that the response will be sent asynchronously
 });
 
-function createSidebar() {
-  if (sidebar) return;
-
-  sidebar = document.createElement('div');
-  sidebar.id = 'tabsmart-sidebar';
-  sidebar.style.cssText = `
-    position: fixed;
-    top: 0;
-    right: 0;
-    width: 400px;
-    height: 100vh;
-    background: white;
-    box-shadow: -2px 0 5px rgba(0,0,0,0.1);
-    z-index: 9999;
-  `;
-
-  const iframe = document.createElement('iframe');
-  iframe.src = chrome.runtime.getURL('index.html');
-  iframe.style.cssText = `
-    width: 100%;
-    height: 100%;
-    border: none;
-  `;
-
-  sidebar.appendChild(iframe);
-  document.body.appendChild(sidebar);
-  document.body.style.marginRight = '400px';
-}
-
-function removeSidebar() {
-  if (sidebar) {
-    document.body.removeChild(sidebar);
-    document.body.style.marginRight = '0';
-    sidebar = null;
+// Function to update the UI based on pin state
+function updatePinnedUI(isPinned) {
+  const pinnedElementId = 'tabsmart-pinned-element';
+  
+  let pinnedElement = document.getElementById(pinnedElementId);
+  
+  if (isPinned) {
+    if (!pinnedElement) {
+      pinnedElement = document.createElement('div');
+      pinnedElement.id = pinnedElementId;
+      pinnedElement.style.position = 'fixed';
+      pinnedElement.style.top = '10px';
+      pinnedElement.style.right = '10px';
+      pinnedElement.style.backgroundColor = 'rgba(255, 255, 255, 0.9)';
+      pinnedElement.style.border = '1px solid #ccc';
+      pinnedElement.style.padding = '10px';
+      pinnedElement.style.zIndex = '10000';
+      pinnedElement.innerText = 'TabSmart Extension - Pinned';
+      document.body.appendChild(pinnedElement);
+    }
+  } else {
+    if (pinnedElement) {
+      document.body.removeChild(pinnedElement);
+    }
   }
 }
+
+// Check initial pin state when content script loads
+chrome.runtime.sendMessage({action: 'getPinState'}, (response) => {
+  if (response && response.isPinned !== undefined) {
+    updatePinnedUI(response.isPinned);
+  }
+});
