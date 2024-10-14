@@ -1,29 +1,51 @@
 import React, { useState } from 'react';
 
-const GroupTabs = ({ onGroupCreate }) => {
+const GroupTabs = ({ tabs, onGroupCreate }) => {
   const [groupName, setGroupName] = useState('');
+  const [selectedTabs, setSelectedTabs] = useState([]);
 
-  const handleSubmit = (e) => {
-    e.preventDefault();
-    if (groupName.trim()) {
-      onGroupCreate(groupName);
+  const handleGroupCreate = () => {
+    if (groupName && selectedTabs.length > 0) {
+      onGroupCreate(groupName, selectedTabs);
       setGroupName('');
+      setSelectedTabs([]);
     }
   };
 
+  const toggleTabSelection = (tabId) => {
+    setSelectedTabs(prev => 
+      prev.includes(tabId) 
+        ? prev.filter(id => id !== tabId)
+        : [...prev, tabId]
+    );
+  };
+
   return (
-    <form onSubmit={handleSubmit} className="mt-4">
+    <div className="mt-4">
       <input
         type="text"
         value={groupName}
         onChange={(e) => setGroupName(e.target.value)}
-        placeholder="New group name"
-        className="p-2 border rounded mr-2"
+        placeholder="Enter group name"
+        className="p-2 border rounded"
       />
-      <button type="submit" className="p-2 bg-blue-500 text-white rounded hover:bg-blue-600">
+      <div className="mt-2 max-h-40 overflow-y-auto">
+        {tabs.map(tab => (
+          <div key={tab.id} className="flex items-center">
+            <input
+              type="checkbox"
+              checked={selectedTabs.includes(tab.id)}
+              onChange={() => toggleTabSelection(tab.id)}
+              className="mr-2"
+            />
+            <span className="truncate">{tab.title}</span>
+          </div>
+        ))}
+      </div>
+      <button onClick={handleGroupCreate} className="mt-2 p-2 bg-blue-500 text-white rounded">
         Create Group
       </button>
-    </form>
+    </div>
   );
 };
 
